@@ -1,0 +1,28 @@
+---
+lint: |
+  set -e
+  yamllint --config-data '{extends: relaxed, ignore: .tox/}' .
+  ansible-lint --exclude '.tox/'
+  flake8
+dependency:
+  name: galaxy
+  enabled: false
+driver:
+  name: docker
+platforms:
+  - name: ubuntu20
+    image: jrei/systemd-ubuntu:20.04
+    privileged: false
+    override_command: false
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /tmp
+      - /run
+      - /run/lock
+provisioner:
+  name: ansible
+  playbooks:
+    converge: converge.yml
+verifier:
+  name: testinfra

@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+User={{ celery_user_uid }}
+Group={{ celery_user_gid }}
+
+WorkingDirectory={{ celery_virtualenv_path }}
+
+Environment=LC_ALL=C.UTF-8
+Environment=LANG=C.UTF-8
+
+# Application config environment
+EnvironmentFile={{ celery_environment_file_path }}
+
+ExecStart={{ celery_virtualenv_path }}/bin/celery \
+  --app {{ celery_app | mandatory }} \
+  worker \
+  --loglevel INFO \
+  --without-heartbeat
+{#  --exclude-queues thumbnails'#}
+
+TimeoutStopSec=90s
+# Only SIGTERM the main process, since Celery is pre-fork by default
+KillMode=mixed
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

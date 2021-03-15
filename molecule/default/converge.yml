@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: ansible-role-girder-celery
+      vars:
+        celery_app: test_project.celery
+        celery_repository_url: https://github.com/girder/ansible-role-girder-celery.git
+        celery_repository_ref: test-project

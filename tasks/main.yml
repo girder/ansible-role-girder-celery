@@ -1,4 +1,13 @@
 ---
+- name: Install prerequistite packages
+  apt:
+    name:
+      - git
+    # Update the cache on the first usage of Apt
+    update_cache: true
+  become: true
+  become_user: root
+
 - name: Install system Python
   apt:
     name:
@@ -6,16 +15,14 @@
       - python3-pip
       - python3-setuptools
       - python3-venv
-    update_cache: true
   become: true
   become_user: root
 
-- name: Install other system packages
+- name: Install packages for Python building
   apt:
     name:
       # libpq-dev is needed for psycopg2
       - libpq-dev
-    update_cache: true
   become: true
   become_user: root
 
@@ -30,7 +37,8 @@
   become: true
   become_user: root
 
-# Cloning a local copy allows local tracking of when the repo has changed, to ensure idempotence
+# Cloning a local copy allows local tracking of when the repo has changed,
+# to ensure idempotence
 - name: Clone repository
   git:
     repo: "{{ celery_repository_url | mandatory }}"
@@ -39,17 +47,27 @@
     force: true
     dest: "{{ celery_repo_path }}"
   register: git_result
+  # When none of the pip versions change, the "pip" step will perform a
+  # re-installation, but will not set itself as changed, so ensure here that
+  # the restart happens.
+  notify: Restart Celery
 
 - name: Check for requirements file
   stat:
     path: "{{ celery_repo_path }}/requirements.txt"
-  register: requirements_result
+  register: req_result
 
 - name: Install package in virtualenv
   pip:
-    name: "{{ celery_repo_path }}"
+    # Install from requirements if it exists, otherwise install the repo path
+    requirements:
+      "{{ req_result.stat.exists | ternary(req_result.stat.path, omit) }}"
+    name:
+      "{{ req_result.stat.exists | ternary(omit, celery_repo_path) }}"
+    # Some requirements files use paths relative to the repo root,
+    # so use that as the CWD
+    chdir: "{{ celery_repo_path }}"
     state: forcereinstall
-    requirements: "{{ requirements_result.stat.exists | ternary(requirements_result.stat.path, omit)}}"
     virtualenv: "{{ celery_virtualenv_path }}"
     virtualenv_command: "python3 -m venv"
   become: true

@@ -1,0 +1,4 @@
+# {{ ansible_managed }}
+{% for environment_key, environment_value in celery_environment.items() %}
+{{ environment_key }}={{ environment_value }}
+{% endfor %}
