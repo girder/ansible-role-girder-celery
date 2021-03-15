@@ -1,0 +1,105 @@
+---
+- name: Install system Python
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-setuptools
+      - python3-venv
+    update_cache: true
+  become: true
+  become_user: root
+
+- name: Install other system packages
+  apt:
+    name:
+      # libpq-dev is needed for psycopg2
+      - libpq-dev
+    update_cache: true
+  become: true
+  become_user: root
+
+- name: Ensure virtualenv is using a recent pip version
+  pip:
+    name: "pip"
+    # This is the first version with the new resolver
+    version: ">=20.3"
+    virtualenv: "{{ celery_virtualenv_path }}"
+    # This implicitly creates a virtualenv, so do so using the Python 3 syntax
+    virtualenv_command: "python3 -m venv"
+  become: true
+  become_user: root
+
+# Cloning a local copy allows local tracking of when the repo has changed, to ensure idempotence
+- name: Clone repository
+  git:
+    repo: "{{ celery_repository_url | mandatory }}"
+    version: "{{ celery_repository_ref }}"
+    update: true
+    force: true
+    dest: "{{ celery_repo_path }}"
+  register: git_result
+
+- name: Check for requirements file
+  stat:
+    path: "{{ celery_repo_path }}/requirements.txt"
+  register: requirements_result
+
+- name: Install package in virtualenv
+  pip:
+    name: "{{ celery_repo_path }}"
+    state: forcereinstall
+    requirements: "{{ requirements_result.stat.exists | ternary(requirements_result.stat.path, omit)}}"
+    virtualenv: "{{ celery_virtualenv_path }}"
+    virtualenv_command: "python3 -m venv"
+  become: true
+  become_user: root
+  when: git_result.changed  # noqa 503
+  notify: Restart Celery
+
+- name: Create Celery daemon user / group
+  user:
+    name: "{{ celery_user_name }}"
+    system: true
+    home: "{{ celery_virtualenv_path }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+  become: true
+  become_user: root
+  register: user_result
+
+- name: Set facts about Celery daemon user / group
+  set_fact:
+    celery_user_uid: "{{ user_result.uid }}"
+    celery_user_gid: "{{ user_result.group }}"
+
+- name: Install Celery service
+  template:
+    src: "celery.service.j2"
+    dest: "/etc/systemd/system/celery.service"
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+  become_user: root
+  notify: Restart Celery
+
+- name: Deploy Celery environment config file
+  template:
+    src: "celery.conf.j2"
+    dest: "{{ celery_environment_file_path }}"
+    owner: root
+    group: root
+    # This file contains secrets, so only root (systemd) can read it
+    mode: 0600
+  become: true
+  become_user: root
+  notify: Restart Celery
+
+- name: Enable Celery service
+  systemd:
+    name: celery
+    daemon_reload: true
+    enabled: true
+  become: true
+  become_user: root

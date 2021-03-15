@@ -1,0 +1,3 @@
+---
+celery_environment: {}
+celery_repository_ref: HEAD

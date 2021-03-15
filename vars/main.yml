@@ -1,0 +1,6 @@
+---
+celery_repo_path: "{{ ansible_facts['user_dir'] }}/celery_project"
+celery_virtualenv_path: /opt/celery
+celery_user_name: celery
+celery_environment_file_path: /etc/celery.conf
+

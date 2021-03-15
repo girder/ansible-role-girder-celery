@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  role_name: celery
+  author: girder
+  description: Install a Celery worker.
+
+  company: Kitware, Inc.
+  issue_tracker_url:
+    https://github.com/girder/ansible-role-girder-celery/issues
+
+  license: Apache
+
+  min_ansible_version: 2.7
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+
+  galaxy_tags:
+    - celery
