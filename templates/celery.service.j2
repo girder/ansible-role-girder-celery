@@ -20,7 +20,6 @@ ExecStart={{ celery_virtualenv_path }}/bin/celery \
   worker \
   --loglevel INFO \
   --without-heartbeat
-{#  --exclude-queues thumbnails'#}
 
 TimeoutStopSec=90s
 # Only SIGTERM the main process, since Celery is pre-fork by default
@@ -30,4 +29,3 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-
