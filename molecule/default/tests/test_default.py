@@ -4,9 +4,9 @@ import packaging.version
 
 
 def test_python(host):
-    mongodb_package = host.package('python3')
-    assert mongodb_package.is_installed
-    assert mongodb_package.version.startswith('3.8')
+    python_package = host.package('python3')
+    assert python_package.is_installed
+    assert python_package.version.startswith('3.8')
 
 
 def test_pip_version(host):
