@@ -19,3 +19,5 @@ galaxy_info:
 
   galaxy_tags:
     - celery
+    - girder
+    - girder4
