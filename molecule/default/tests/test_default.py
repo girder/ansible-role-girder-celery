@@ -10,18 +10,15 @@ def test_python(host):
 
 
 def test_pip_version(host):
-    python_packages = host.pip_package.get_packages(
-        pip_path='/opt/celery/bin/pip')
-    assert 'pip' in python_packages
-    pip_version = packaging.version.parse(python_packages['pip']['version'])
+    pip_package = host.pip('pip', pip_path='/opt/celery/bin/pip')
+    assert pip_package.is_installed
+    pip_version = packaging.version.parse(pip_package.version)
     assert pip_version >= packaging.version.parse('20.3')
 
 
 def test_pip_requirements(host):
-    python_packages = host.pip_package.get_packages(
-        pip_path='/opt/celery/bin/pip')
     # "requests" is only present in "requirements.txt", which should be found
-    assert 'requests' in python_packages
+    assert host.pip('requests', pip_path='/opt/celery/bin/pip').is_installed
 
 
 def test_celery_user(host):
