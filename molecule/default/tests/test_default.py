@@ -45,8 +45,8 @@ def test_celery_user_password(host):
 
 
 def test_celery_group(host):
-    mongodb_group = host.user('celery')
-    assert mongodb_group.exists
+    celery_group = host.user('celery')
+    assert celery_group.exists
 
 
 def test_celery_service(host):
