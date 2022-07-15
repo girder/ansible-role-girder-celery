@@ -1,6 +1,6 @@
 ---
 - name: Restart Celery
-  systemd:
+  ansible.builtin.systemd:
     name: celery
     daemon_reload: true
     state: restarted

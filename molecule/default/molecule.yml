@@ -6,7 +6,6 @@ lint: |
   flake8
 dependency:
   name: galaxy
-  enabled: false
 driver:
   name: docker
 platforms:
